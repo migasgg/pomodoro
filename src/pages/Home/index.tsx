@@ -1,8 +1,8 @@
 import { Play } from "phosphor-react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as zod from 'zod'
-
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as zod from "zod";
+import { useEffect, useState } from "react";
 import {
   CountdownContainer,
   FormContainer,
@@ -12,39 +12,82 @@ import {
   StartCountdownButton,
   TaskInput,
 } from "./styles";
+import { differenceInSeconds } from "date-fns";
 
 const newCycleFormValidationScheme = zod.object({
-  task: zod.string().min(1, 'Informe a tarefa'),
+  task: zod.string().min(1, "Informe a tarefa"),
   minutesAmount: zod
     .number()
-    .min(5, 'O ciclo precisa ser de no mínimo 5 minutos!')
-    .max(60, 'O ciclo precisa ser de no máximo 60 minutos!')
-})
+    .min(5, "O ciclo precisa ser de no mínimo 5 minutos!")
+    .max(60, "O ciclo precisa ser de no máximo 60 minutos!"),
+});
 
-interface NewCycleFormData{
-  task: string
-  minutesAmount: number
+interface NewCycleFormData {
+  task: string;
+  minutesAmount: number;
+}
+
+interface Cycle {
+  id: string;
+  task: string;
+  minutesAmount: number;
+  startDate: Date;
 }
 
 export function Home() {
-  const {handleSubmit, watch, register, reset, formState} = useForm<NewCycleFormData>({
+  const [cycles, setCycle] = useState<Cycle[]>([]);
+  const [activeCycleId, setActiveCycleID] = useState<string | null>(null);
+  const [amountSecondPassed, setAmountSecondPassed] = useState(0);
+
+  const { handleSubmit, watch, register, reset } = useForm<NewCycleFormData>({
     resolver: zodResolver(newCycleFormValidationScheme),
     defaultValues: {
-      // task: '',
-      minutesAmount: 0
+      task: "",
+      minutesAmount: 0,
+    },
+  });
+
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId);
+
+  useEffect(() => {
+    if (activeCycle) {
+      setInterval(() => {
+        setAmountSecondPassed(
+          differenceInSeconds(new Date(), activeCycle.startDate)
+        );
+      }, 1000);
     }
-  })
+  }, [activeCycle]);
 
   function handleCreateNewCycle(data: NewCycleFormData) {
-    console.log(data)
-    reset()
+    const id = String(new Date().getTime());
+
+    const newCycle: Cycle = {
+      id,
+      task: data.task,
+      minutesAmount: data.minutesAmount,
+      startDate: new Date(),
+    };
+
+    setCycle((state) => [...state, newCycle]);
+    setActiveCycleID(id);
+
+    reset();
   }
 
-  // formState mostra os erros da validação feitas pelo zod
-  console.log(formState.errors)
+  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0;
+  const currentSeconds = activeCycle ? totalSeconds - amountSecondPassed : 0;
 
-  const task = watch('task')
-  const isSubmitDisabled = !task
+  const minutesAmount = Math.floor(currentSeconds / 60);
+  const secondsAmount = currentSeconds % 60;
+
+  const minutes = String(minutesAmount).padStart(2, "0");
+  const second = String(secondsAmount).padStart(2, `0`);
+
+  console.log(activeCycle);
+
+  const task = watch("task");
+  const isSubmitDisabled = !task;
 
   return (
     <HomeContainer>
@@ -55,7 +98,7 @@ export function Home() {
             id="task"
             list="task-suggestions"
             placeholder="Dê um nome para o seu projeto"
-            {...register('task')}
+            {...register("task")}
           />
 
           <datalist id="task-suggestions">
@@ -73,17 +116,17 @@ export function Home() {
             step={5}
             min={5}
             max={60}
-            {...register('minutesAmount', {valueAsNumber: true})}
+            {...register("minutesAmount", { valueAsNumber: true })}
           />
           <span>minutos.</span>
         </FormContainer>
 
         <CountdownContainer>
-          <span>0</span>
-          <span>0</span>
+          <span>{minutes[0]}</span>
+          <span>{minutes[1]}</span>
           <Separator>:</Separator>
-          <span>0</span>
-          <span>0</span>
+          <span>{second[0]}</span>
+          <span>{second[1]}</span>
         </CountdownContainer>
 
         <StartCountdownButton disabled={isSubmitDisabled} type="submit">
