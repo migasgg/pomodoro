@@ -12,13 +12,6 @@ import { differenceInSeconds } from "date-fns"
 import { NewCycleForm } from "./components/NewCycleForm"
 import { Countdown } from "./components/Countdown"
 
-const newCycleFormValidationScheme = zod.object({
-  task: zod.string().min(1, "Informe a tarefa"),
-  minutesAmount: zod
-    .number()
-    .min(1, "O ciclo precisa ser de no mínimo 5 minutos!")
-    .max(60, "O ciclo precisa ser de no máximo 60 minutos!"),
-})
 
 interface NewCycleFormData {
   task: string
@@ -37,15 +30,6 @@ interface Cycle {
 export function Home() {
   const [cycles, setCycle] = useState<Cycle[]>([])
   const [activeCycleId, setActiveCycleID] = useState<string | null>(null)
-  const [amountSecondPassed, setAmountSecondPassed] = useState(0)
-
-  const { handleSubmit, watch, register, reset } = useForm<NewCycleFormData>({
-    resolver: zodResolver(newCycleFormValidationScheme),
-    defaultValues: {
-      task: "",
-      minutesAmount: 0,
-    },
-  })
 
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
 

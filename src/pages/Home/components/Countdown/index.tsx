@@ -1,6 +1,8 @@
 import { CountdownContainer, Separator } from "./styles"
 
 export function Countdown() {
+  const [amountSecondPassed, setAmountSecondPassed] = useState(0)
+
   return (
     <CountdownContainer>
       <span>{minutes[0]}</span>
