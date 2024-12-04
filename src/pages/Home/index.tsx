@@ -12,7 +12,6 @@ import { differenceInSeconds } from "date-fns"
 import { NewCycleForm } from "./components/NewCycleForm"
 import { Countdown } from "./components/Countdown"
 
-
 interface NewCycleFormData {
   task: string
   minutesAmount: number
@@ -32,42 +31,6 @@ export function Home() {
   const [activeCycleId, setActiveCycleID] = useState<string | null>(null)
 
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
-
-  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
-
-  useEffect(() => {
-    let interval: number
-
-    if (activeCycle) {
-      interval = setInterval(() => {
-        const secondsDifference = differenceInSeconds(
-          new Date(),
-          activeCycle.startDate
-        )
-
-        if (secondsDifference >= totalSeconds) {
-          setCycle((state) =>
-            state.map((cycle) => {
-              if (cycle.id === activeCycleId) {
-                return { ...cycle, finishedDate: new Date() }
-              } else {
-                return cycle
-              }
-            })
-          )
-
-          setAmountSecondPassed(totalSeconds)
-          clearInterval(interval)
-        } else {
-          setAmountSecondPassed(secondsDifference)
-        }
-      }, 1000)
-    }
-
-    return () => {
-      clearInterval(interval)
-    }
-  }, [activeCycle, totalSeconds])
 
   function handleCreateNewCycle(data: NewCycleFormData) {
     const id = String(new Date().getTime())
@@ -123,7 +86,11 @@ export function Home() {
     <HomeContainer>
       <form onSubmit={handleSubmit(handleCreateNewCycle)} action="">
         <NewCycleForm />
-        <Countdown />
+        <Countdown
+          activeCycle={activeCycle}
+          setCycle={setCycle}
+          activeCycleId={activeCycleId}
+        />
 
         {activeCycle ? (
           <StopCountdownButton onClick={handleInterruptCycle} type="button">
